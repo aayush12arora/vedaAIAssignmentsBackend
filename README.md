@@ -1,4 +1,4 @@
-﻿# VedaAI Backend
+﻿# VedaAI Assignment/Question Paper Generator Backend
 
 Production API base URL:
 
