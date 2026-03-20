@@ -4,6 +4,10 @@ const PDFDocument = require('pdfkit');
  * PDF Service - Generate question paper PDFs
  */
 const pdfService = {
+  stripDifficultyPrefix(text = '') {
+    return text.replace(/^\s*\[(easy|moderate|medium|hard|challenging)\]\s*/i, '');
+  },
+
   /**
    * Generate PDF for a question paper
    * @param {Object} questionPaper - Question paper data
@@ -185,36 +189,16 @@ const pdfService = {
        .text(`Q${question.questionNumber}. `, { continued: true });
     
     doc.font('Helvetica')
-       .text(question.questionText, {
+       .text(this.stripDifficultyPrefix(question.questionText), {
          width: questionWidth - 50,
          align: 'justify'
        });
 
-    // Marks and difficulty badge
+     // Marks
     const marksX = doc.page.width - 100;
     doc.fontSize(9)
        .font('Helvetica')
        .text(`[${question.marks} marks]`, marksX, startY, { width: 50 });
-
-    // Difficulty badge
-    const difficultyColors = {
-      easy: '#28a745',
-      medium: '#ffc107',
-      hard: '#dc3545'
-    };
-    
-    const difficultyLabels = {
-      easy: 'Easy',
-      medium: 'Moderate',
-      hard: 'Hard'
-    };
-
-    // Move below marks for difficulty
-    doc.fontSize(8)
-       .fillColor(difficultyColors[question.difficulty] || '#666')
-       .text(difficultyLabels[question.difficulty] || question.difficulty, marksX, startY + 12, { width: 50 });
-    
-    doc.fillColor('#000'); // Reset color
 
     doc.moveDown(0.3);
 
