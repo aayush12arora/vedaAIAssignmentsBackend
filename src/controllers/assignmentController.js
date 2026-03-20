@@ -29,6 +29,7 @@ const assignmentController = {
    * POST /api/assignments
    */
   async create(req, res) {
+    console.log("creating")
     try {
       const questionTypes = parseJsonField(req.body.questionTypes, []);
       const difficultyDistribution = parseJsonField(
