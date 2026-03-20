@@ -12,7 +12,7 @@ const geminiService = {
    * Get the Gemini Pro model instance
    */
   getModel() {
-    return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    return genAI.getGenerativeModel({ model: config.gemini.model });
   },
 
   /**

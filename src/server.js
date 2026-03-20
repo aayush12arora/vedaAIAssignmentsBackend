@@ -16,8 +16,20 @@ const server = http.createServer(app);
 
 // Middleware
 app.use(cors({
-  origin: config.frontendUrl,
-  credentials: true
+  origin(origin, callback) {
+    // Allow non-browser requests (curl/postman/health checks)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (config.frontendUrls.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
