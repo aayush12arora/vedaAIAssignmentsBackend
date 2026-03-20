@@ -53,7 +53,7 @@ const startServer = async () => {
     initializeQueue();
 
     // Start server
-    server.listen(config.port, () => {
+    server.listen(config.port, "0.0.0.0", () => {
       console.log(`
 ╔═══════════════════════════════════════════════════════╗
 ║                 VedaAI Backend Server                 ║
