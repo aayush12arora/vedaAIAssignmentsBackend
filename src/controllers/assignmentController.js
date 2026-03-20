@@ -1,6 +1,6 @@
 const Assignment = require('../models/Assignment');
 const QuestionPaper = require('../models/QuestionPaper');
-const { addJobToQueue } = require('../workers/questionGenerationWorker');
+const { addJobToQueue, getJobStatus } = require('../workers/questionGenerationWorker');
 const { cacheGet, cacheSet, cacheDelete, cacheDeleteByPattern } = require('../config/redis');
 const socketService = require('../services/socketService');
 
@@ -350,6 +350,57 @@ const assignmentController = {
       res.status(500).json({
         success: false,
         message: 'Failed to start question generation',
+        error: error.message
+      });
+    }
+  },
+
+  /**
+   * Get generation job status for an assignment
+   * GET /api/assignments/:id/job/:jobId
+   */
+  async getGenerationStatus(req, res) {
+    try {
+      const { id, jobId } = req.params;
+
+      const assignment = await Assignment.findById(id);
+      if (!assignment) {
+        return res.status(404).json({
+          success: false,
+          message: 'Assignment not found'
+        });
+      }
+
+      const job = await getJobStatus(jobId);
+
+      if (!job) {
+        return res.status(404).json({
+          success: false,
+          message: 'Job not found'
+        });
+      }
+
+      const numericProgress = typeof job.progress === 'number'
+        ? job.progress
+        : (job.progress?.progress || 0);
+
+      res.json({
+        success: true,
+        data: {
+          assignmentId: id,
+          jobId: String(job.id),
+          state: job.state,
+          progress: Math.max(0, Math.min(100, Number(numericProgress) || 0)),
+          status: assignment.status,
+          generatedPaperId: assignment.generatedPaperId || null,
+          errorMessage: assignment.errorMessage || null
+        }
+      });
+    } catch (error) {
+      console.error('Get Generation Status Error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch generation status',
         error: error.message
       });
     }

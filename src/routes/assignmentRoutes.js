@@ -29,6 +29,9 @@ router.post('/:id/generate', assignmentController.generateQuestions);
 // Regenerate questions for assignment
 router.post('/:id/regenerate', assignmentController.regenerateQuestions);
 
+// Get job status/progress for assignment generation
+router.get('/:id/job/:jobId', assignmentController.getGenerationStatus);
+
 // Get question paper for assignment
 router.get('/:id/paper', assignmentController.getQuestionPaper);
 
