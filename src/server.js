@@ -17,14 +17,19 @@ const server = http.createServer(app);
 // Middleware
 app.use(cors({
   origin(origin, callback) {
-    // Allow non-browser requests (curl/postman/health checks)
-    if (!origin) {
-      return callback(null, true);
-    }
+    if (!origin) return callback(null, true);
 
-    if (config.frontendUrls.includes(origin)) {
-      return callback(null, true);
-    }
+    const allowed = config.frontendUrls.some(url => {
+      // exact match
+      if (origin === url) return true;
+
+      // allow all vercel preview URLs
+      if (url.includes("vercel.app") && origin.includes("vercel.app")) return true;
+
+      return false;
+    });
+
+    if (allowed) return callback(null, true);
 
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
