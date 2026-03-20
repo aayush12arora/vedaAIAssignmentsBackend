@@ -73,11 +73,28 @@ const cacheDelete = async (key) => {
   }
 };
 
+const cacheDeleteByPattern = async (pattern) => {
+  if (!redisClient) return null;
+  try {
+    const keys = await redisClient.keys(pattern);
+    if (!keys.length) {
+      return 0;
+    }
+
+    await redisClient.del(keys);
+    return keys.length;
+  } catch (error) {
+    console.error('Redis Cache Pattern Delete Error:', error);
+    return false;
+  }
+};
+
 module.exports = {
   connectRedis,
   getRedisClient,
   disconnectRedis,
   cacheSet,
   cacheGet,
-  cacheDelete
+  cacheDelete,
+  cacheDeleteByPattern
 };

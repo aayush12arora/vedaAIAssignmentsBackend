@@ -1,7 +1,7 @@
 const Assignment = require('../models/Assignment');
 const QuestionPaper = require('../models/QuestionPaper');
 const { addJobToQueue } = require('../workers/questionGenerationWorker');
-const { cacheGet, cacheSet, cacheDelete } = require('../config/redis');
+const { cacheGet, cacheSet, cacheDelete, cacheDeleteByPattern } = require('../config/redis');
 const socketService = require('../services/socketService');
 
 const parseJsonField = (value, fallback) => {
@@ -18,6 +18,10 @@ const parseJsonField = (value, fallback) => {
   } catch (error) {
     return fallback;
   }
+};
+
+const clearAssignmentListCache = async () => {
+  await cacheDeleteByPattern('assignments:all:*');
 };
 
 /**
@@ -86,7 +90,7 @@ const assignmentController = {
       await assignment.save();
 
       // Clear assignments cache
-      await cacheDelete('assignments:all');
+      await clearAssignmentListCache();
 
       res.status(201).json({
         success: true,
@@ -232,7 +236,7 @@ const assignmentController = {
 
       // Clear related cache
       await cacheDelete(`assignment:${id}`);
-      await cacheDelete('assignments:all');
+      await clearAssignmentListCache();
 
       res.json({
         success: true,
@@ -274,7 +278,7 @@ const assignmentController = {
 
       // Clear cache
       await cacheDelete(`assignment:${id}`);
-      await cacheDelete('assignments:all');
+      await clearAssignmentListCache();
 
       res.json({
         success: true,
@@ -325,6 +329,7 @@ const assignmentController = {
 
       // Clear cache
       await cacheDelete(`assignment:${id}`);
+      await clearAssignmentListCache();
 
       // Notify via WebSocket
       socketService.emitJobStatus(id, 'processing', {
@@ -432,6 +437,7 @@ const assignmentController = {
 
       // Clear cache
       await cacheDelete(`assignment:${id}`);
+      await clearAssignmentListCache();
 
       // Notify via WebSocket
       socketService.emitJobStatus(id, 'processing', {
@@ -489,6 +495,9 @@ const assignmentController = {
         },
         { new: true }
       );
+
+      await cacheDelete(`assignment:${id}`);
+      await clearAssignmentListCache();
 
       res.json({
         success: true,

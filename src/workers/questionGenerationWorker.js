@@ -4,9 +4,15 @@ const geminiService = require('../services/geminiService');
 const Assignment = require('../models/Assignment');
 const QuestionPaper = require('../models/QuestionPaper');
 const socketService = require('../services/socketService');
+const { cacheDelete, cacheDeleteByPattern } = require('../config/redis');
 
 let questionQueue = null;
 let questionWorker = null;
+
+const clearAssignmentCaches = async (assignmentId) => {
+  await cacheDelete(`assignment:${assignmentId}`);
+  await cacheDeleteByPattern('assignments:all:*');
+};
 
 /**
  * Initialize BullMQ Queue and Worker
@@ -50,6 +56,8 @@ const initializeQueue = () => {
         status: 'failed',
         errorMessage: err.message
       });
+
+      await clearAssignmentCaches(job.data.assignmentId);
 
       // Notify via WebSocket
       socketService.emitGenerationError(job.data.assignmentId, err.message);
@@ -124,6 +132,8 @@ const processQuestionGeneration = async (job) => {
       errorMessage: null
     });
 
+    await clearAssignmentCaches(assignmentId);
+
     await job.updateProgress(100);
     
     // Notify completion via WebSocket
@@ -138,6 +148,8 @@ const processQuestionGeneration = async (job) => {
       status: 'failed',
       errorMessage: error.message
     });
+
+    await clearAssignmentCaches(assignmentId);
 
     // Notify error via WebSocket
     socketService.emitGenerationError(assignmentId, error.message);
